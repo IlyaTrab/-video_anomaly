@@ -31,7 +31,7 @@ def process_frame(frame, background_subtractor=None):
 def detect_motion(prev_frame, current_frame, threshold=30):
     """
     Обнаруживает движение путем сравнения текущего и предыдущего кадров.
-    Пока не активна
+    Функция пока не активна
     """
     diff = cv2.absdiff(prev_frame, current_frame)
     _, thresh = cv2.threshold(diff, threshold, 255, cv2.THRESH_BINARY)
