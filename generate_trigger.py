@@ -11,6 +11,7 @@ def generate_trigger(width, height, trigger_type='rectangle', color=(0, 255, 0, 
     :param height: Высота триггера.
     :param trigger_type: Тип триггера ('rectangle', 'circle', 'noise').
     :param color: Цвет триггера в формате RGB.
+    :param alpha 4-й канал для добавления прозрачности триггера ---> незаметность 
     :return: Изображение триггера.
     """
     trigger = np.zeros((height, width, 4), dtype=np.uint8)  # Использование 4 каналов (RGBA)
@@ -30,18 +31,20 @@ def initialize_logging():
     return logging.getLogger('VideoBackdoorTrigger')
 
 def overlay_image_alpha(img, img_overlay, x, y, overlay_size=None):
-    """
-    Наложение img_overlay на img при помощи альфа-канала img_overlay.
-    """
-    h, w, _ = img_overlay.shape
+    # Усечение размера триггера, если он выходит за границы кадра
+    h, w = img_overlay.shape[:2]
+    if y + h > img.shape[0]:
+        h = img.shape[0] - y
+    if x + w > img.shape[1]:
+        w = img.shape[1] - x
+    img_overlay = img_overlay[:h, :w]
+    # Подготовка маски и её инверсии
     if overlay_size:
         img_overlay = cv2.resize(img_overlay, overlay_size)
-
-    # Подготовка маски и её инверсии
+    # Смешивание кадров
     alpha = img_overlay[:, :, 3] / 255.0
     alpha_inv = 1.0 - alpha
 
-    # Смешивание кадров
     for c in range(0, 3):
         img[y:y+h, x:x+w, c] = (alpha * img_overlay[:, :, c] +
                                 alpha_inv * img[y:y+h, x:x+w, c])
